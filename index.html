@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#e8590c"><title>Karigar Directory</title><link rel="icon" href="data:image/svg+xml,<svg width='40' height='40' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23e8590c'/><g stroke='%23fff' stroke-linecap='round' fill='none'><line x1='20' y1='44' x2='42' y2='22' stroke-width='5'/><line x1='36' y1='18' x2='46' y2='28' stroke-width='9'/><line x1='44' y1='44' x2='25' y2='25' stroke-width='5'/><circle cx='21' cy='21' r='6' stroke-width='4'/></g><line x1='14' y1='14' x2='19' y2='19' stroke='%23e8590c' stroke-width='5' stroke-linecap='round'/><circle cx='50' cy='14' r='5' fill='%23fff'/><path d='M48 14l1.6 1.6L52.5 12' stroke='%23e8590c' stroke-width='1.6' fill='none'/></svg>">
+<style>
+:root{--bg:#fff8f0;--card:#fff;--tx:#222;--mu:#666;--pr:#e8590c;--bd:#e6d9cc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#1b1612;--card:#271f19;--tx:#f3ece6;--mu:#b5a79a;--pr:#ff8a3d;--bd:#41352b}}
+*{box-sizing:border-box}body{margin:0 auto;background:var(--bg);color:var(--tx);font:16px system-ui,sans-serif;max-width:560px;padding:12px}
+h1{font-size:20px;margin:4px 0}select,input,button{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);width:100%;margin:4px 0}
+button,.call{background:var(--pr);color:#fff;border:0;font-weight:600;cursor:pointer}
+.row{display:flex;gap:8px}.row>*{flex:1}.tabs button{background:var(--card);color:var(--tx);border:1px solid var(--bd)}.tabs .on{background:var(--pr);color:#fff}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:8px 0}
+.call{display:block;text-align:center;padding:10px;border-radius:10px;text-decoration:none}.wa{background:#25a244}
+.mu{color:var(--mu);font-size:13px}.rep{background:none;color:var(--mu);border:0;font-size:12px;width:auto;padding:4px 0;font-weight:400}
+.rt{background:none;color:var(--pr);border:0;width:auto;padding:6px 0;font-weight:600;margin:0}.gh{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.ok{color:#2b8a3e;font-size:14px}.rv{border-top:1px solid var(--bd);margin-top:8px;padding-top:6px}.rv p{margin:4px 0;font-size:14px}
+</style></head><body>
+<div class="row"><h1 style="display:flex;align-items:center;gap:8px"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e8590c"/><g stroke="#fff" stroke-linecap="round" fill="none"><line x1="20" y1="44" x2="42" y2="22" stroke-width="5"/><line x1="36" y1="18" x2="46" y2="28" stroke-width="9"/><line x1="44" y1="44" x2="25" y2="25" stroke-width="5"/><circle cx="21" cy="21" r="6" stroke-width="4"/></g><line x1="14" y1="14" x2="19" y2="19" stroke="#e8590c" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="14" r="5" fill="#fff"/><path d="M48 14l1.6 1.6L52.5 12" stroke="#e8590c" stroke-width="1.6" fill="none"/></svg><span id="t"></span></h1><select id="lang" onchange="setL(this.value)"></select></div>
+<div class="row tabs"><button id="b1" onclick="tab(1)"></button><button id="b2" onclick="tab(2)"></button><button id="b3" onclick="tab(3)" style="flex:0 0 48px" hidden>🔒</button></div>
+<div id="v1"><select id="sk" onchange="list()"></select><input id="ct" oninput="list()"><div class="row"><select id="so2" onchange="srt()"><option value="">↕ Sort / क्रम</option><option value="r">⭐ Rating</option><option value="e">💼 Experience</option><option value="n">📍 Nearest / नज़दीकी</option></select><label class="mu" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="av" onchange="list()" style="width:auto"> 🟢 Available</label></div><div id="ls"><p class="mu">…</p></div></div>
+<div id="v2" hidden></div><div id="v3" hidden></div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,RecaptchaVerifier,signInWithPhoneNumber,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,collectionGroup,doc,getDoc,setDoc,updateDoc,deleteDoc,getDocs,addDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const S=[["Plumber","प्लंबर"],["Electrician","इलेक्ट्रीशियन"],["Carpenter","बढ़ई"],["Painter","पेंटर"],["Mason / Mistri","राजमिस्त्री"],["AC Repair","AC रिपेयर"],["Fridge / Washing Machine Repair","फ्रिज / वॉशिंग मशीन रिपेयर"],["TV / Mobile Repair","टीवी / मोबाइल रिपेयर"],["Welder","वेल्डर"],["Tile / Marble Worker","टाइल / मार्बल कारीगर"],["POP / False Ceiling","POP / फॉल्स सीलिंग"],["House Cleaning","घर की सफाई"],["Pest Control","पेस्ट कंट्रोल"],["Driver","ड्राइवर"],["Cook","रसोइया"],["Tailor","दर्जी"],["Barber / Beautician","नाई / ब्यूटीशियन"],["Bike Mechanic","बाइक मैकेनिक"],["Car Mechanic","कार मैकेनिक"],["Gardener","माली"],["RO / Water Purifier","RO रिपेयर"],["CCTV / Wiring","CCTV / वायरिंग"],["Labour / Helper","मज़दूर / हेल्पर"],["Packers & Movers","पैकर्स एंड मूवर्स"],["Tent / Decorator","टेंट / डेकोरेटर"],["Glass / Aluminium","ग्लास / एल्युमिनियम"],["Tank / Borewell","टंकी / बोरवेल"],["Cobbler","मोची"],["Locksmith","ताला-चाबी"],["Other","अन्य काम"]];
+const T={hi:{t:"करीगर डायरेक्टरी",f:"काम ढूँढें",r:"मैं करीगर हूँ",all:"सभी काम",city:"शहर / इलाका",none:"कोई करीगर नहीं मिला",call:"📞 कॉल करें",rep:"नंबर गलत है? रिपोर्ट करें",yr:"साल अनुभव",nm:"आपका नाम",ex:"अनुभव (साल)",ph:"मोबाइल नंबर (10 अंक)",otp:"OTP भरें",so:"OTP भेजें",vo:"वेरिफाई करें",sv:"प्रोफाइल सबमिट करें",ok:"✅ नंबर वेरिफाई हुआ",bad:"गलत OTP",dup:"यह नंबर पहले से रजिस्टर है",inv:"सही 10 अंक का नंबर डालें",fill:"सभी जानकारी भरें",done:"प्रोफाइल बन गई!",nt:"डेमो: OTP 1234 है। असली ऐप में SMS से जाएगा। नंबर वेरिफाई होने पर ही प्रोफाइल बनती है।"},
+en:{t:"Karigar Directory",f:"Find work",r:"I am a Karigar",all:"All services",city:"City / Area",none:"No karigar found",call:"📞 Call",rep:"Wrong number? Report",yr:"yrs experience",nm:"Your name",ex:"Experience (years)",ph:"Mobile number (10 digits)",otp:"Enter OTP",so:"Send OTP",vo:"Verify",sv:"Submit profile",ok:"✅ Number verified",bad:"Wrong OTP",dup:"This number is already registered",inv:"Enter a valid 10-digit number",fill:"Fill all details",done:"Profile created!",nt:"Demo: OTP is 1234. The real app sends it by SMS. A profile is created only after the number is verified."},
+mr:{t:"कारागीर डिरेक्टरी",f:"काम शोधा",r:"मी कारागीर आहे",all:"सर्व कामे",city:"शहर / परिसर",none:"कारागीर सापडला नाही",call:"📞 कॉल करा",rep:"नंबर चुकीचा? रिपोर्ट करा",yr:"वर्षे अनुभव",nm:"तुमचे नाव",ex:"अनुभव (वर्षे)",ph:"मोबाइल नंबर (10 अंक)",otp:"OTP टाका",so:"OTP पाठवा",vo:"तपासा",sv:"प्रोफाइल सबमिट करा",ok:"✅ नंबर पडताळला",bad:"चुकीचा OTP",dup:"हा नंबर आधीच नोंदणीकृत आहे",inv:"योग्य 10 अंकी नंबर टाका",fill:"सर्व माहिती भरा",done:"प्रोफाइल तयार!",nt:"डेमो: OTP 1234 आहे. खऱ्या ॲपमध्ये SMS ने येईल."},
+gu:{t:"કારીગર ડિરેક્ટરી",f:"કામ શોધો",r:"હું કારીગર છું",all:"બધી સેવાઓ",city:"શહેર / વિસ્તાર",none:"કોઈ કારીગર મળ્યો નથી",call:"📞 કૉલ કરો",rep:"નંબર ખોટો? રિપોર્ટ કરો",yr:"વર્ષ અનુભવ",nm:"તમારું નામ",ex:"અનુભવ (વર્ષ)",ph:"મોબાઇલ નંબર (10 અંક)",otp:"OTP નાખો",so:"OTP મોકલો",vo:"ચકાસો",sv:"પ્રોફાઇલ સબમિટ કરો",ok:"✅ નંબર ચકાસાયો",bad:"ખોટો OTP",dup:"આ નંબર પહેલેથી નોંધાયેલ છે",inv:"સાચો 10 અંકનો નંબર નાખો",fill:"બધી માહિતી ભરો",done:"પ્રોફાઇલ બની ગઈ!",nt:"ડેમો: OTP 1234 છે."},
+bn:{t:"কারিগর ডিরেক্টরি",f:"কাজ খুঁজুন",r:"আমি কারিগর",all:"সব সার্ভিস",city:"শহর / এলাকা",none:"কোনো কারিগর পাওয়া যায়নি",call:"📞 কল করুন",rep:"নম্বর ভুল? রিপোর্ট করুন",yr:"বছর অভিজ্ঞতা",nm:"আপনার নাম",ex:"অভিজ্ঞতা (বছর)",ph:"মোবাইল নম্বর (১০ সংখ্যা)",otp:"OTP দিন",so:"OTP পাঠান",vo:"যাচাই করুন",sv:"প্রোফাইল জমা দিন",ok:"✅ নম্বর যাচাই হয়েছে",bad:"ভুল OTP",dup:"এই নম্বর আগেই নিবন্ধিত",inv:"সঠিক ১০ সংখ্যার নম্বর দিন",fill:"সব তথ্য দিন",done:"প্রোফাইল তৈরি!",nt:"ডেমো: OTP 1234।"}};
+const N={hi:"हिन्दी",en:"English",hn:"Hinglish",mr:"मराठी",gu:"ગુજરાતી",bn:"বাংলা",ta:"தமிழ்",te:"తెలుగు",kn:"ಕನ್ನಡ",ml:"മലയാളം",pa:"ਪੰਜਾਬੀ",or:"ଓଡ଼ିଆ",as:"অসমীয়া",ur:"اردو",sd:"سنڌي",ne:"नेपाली",bho:"भोजपुरी",mai:"मैथिली",kok:"कोंकणी",doi:"डोगरी"};
+Object.assign(T.hi,{lo:"लॉग आउट",del:"मेरी प्रोफाइल हटाएँ",nt:"डेमो: OTP 1234 है। पहले से रजिस्टर हैं? उसी नंबर और OTP से लॉग इन करें।"});
+Object.assign(T.en,{lo:"Log out",del:"Delete my profile",nt:"Demo: OTP is 1234. Already registered? Log in with the same number and OTP."});
+Object.assign(T.mr,{lo:"लॉग आउट",del:"माझी प्रोफाइल हटवा",nt:"डेमो: OTP 1234 आहे. आधीच नोंदणी केली आहे? त्याच नंबर आणि OTP ने लॉग इन करा."});
+Object.assign(T.gu,{lo:"લૉગ આઉટ",del:"મારી પ્રોફાઇલ કાઢી નાખો",nt:"ડેમો: OTP 1234 છે. પહેલેથી નોંધાયેલા? એ જ નંબર અને OTP થી લૉગ ઇન કરો."});
+Object.assign(T.bn,{lo:"লগ আউট",del:"আমার প্রোফাইল মুছুন",nt:"ডেমো: OTP 1234। আগে নিবন্ধিত? একই নম্বর ও OTP দিয়ে লগ ইন করুন।"});
+Object.assign(T.hi,{up:"📷 काम की फोटो / वीडियो जोड़ें",lim:"वीडियो 15MB तक और कुल 8 फाइल"});Object.assign(T.en,{up:"📷 Add work photos / videos",lim:"Video up to 15 MB, max 8 files"});Object.assign(T.mr,{up:"📷 कामाचे फोटो / व्हिडिओ जोडा"});Object.assign(T.gu,{up:"📷 કામના ફોટા / વિડિયો ઉમેરો"});Object.assign(T.bn,{up:"📷 কাজের ছবি / ভিডিও যোগ করুন"});
+Object.assign(T.hi,{dl:"⬇ डाउनलोड",rate:"रेटिंग / कमेंट",cm:"अपना कमेंट लिखें",rnm:"आपका नाम (वैकल्पिक)",sub:"भेजें",norv:"अभी कोई रिव्यू नहीं"});Object.assign(T.en,{dl:"⬇ Download",rate:"Rate / Comment",cm:"Write your comment",rnm:"Your name (optional)",sub:"Submit",norv:"No reviews yet"});Object.assign(T.mr,{dl:"⬇ डाउनलोड",rate:"रेटिंग / कमेंट",cm:"तुमची कमेंट लिहा",rnm:"तुमचे नाव (ऐच्छिक)",sub:"पाठवा",norv:"अजून रिव्ह्यू नाही"});
+const K="t f r all city none call rate".split(" "),LG={ta:["கைவினைஞர் டைரக்டரி","வேலை தேடுங்கள்","நான் கைவினைஞர்","அனைத்து சேவைகள்","நகரம் / பகுதி","கைவினைஞர் இல்லை","📞 அழைக்கவும்","மதிப்பீடு / கருத்து"],te:["కళాకారుల డైరెక్టరీ","పని వెతకండి","నేను కళాకారుడిని","అన్ని సేవలు","నగరం / ప్రాంతం","ఎవరూ దొరకలేదు","📞 కాల్ చేయండి","రేటింగ్ / కామెంట్"],kn:["ಕುಶಲಕರ್ಮಿ ಡೈರೆಕ್ಟರಿ","ಕೆಲಸ ಹುಡುಕಿ","ನಾನು ಕುಶಲಕರ್ಮಿ","ಎಲ್ಲಾ ಸೇವೆಗಳು","ನಗರ / ಪ್ರದೇಶ","ಯಾರೂ ಸಿಗಲಿಲ್ಲ","📞 ಕರೆ ಮಾಡಿ","ರೇಟಿಂಗ್ / ಕಾಮೆಂಟ್"],ml:["കരകൗശല ഡയറക്ടറി","ജോലി കണ്ടെത്തുക","ഞാൻ ഒരു തൊഴിലാളിയാണ്","എല്ലാ സേവനങ്ങളും","നഗരം / പ്രദേശം","ആരെയും കണ്ടെത്തിയില്ല","📞 വിളിക്കുക","റേറ്റിംഗ് / അഭിപ്രായം"],pa:["ਕਾਰੀਗਰ ਡਾਇਰੈਕਟਰੀ","ਕੰਮ ਲੱਭੋ","ਮੈਂ ਕਾਰੀਗਰ ਹਾਂ","ਸਾਰੀਆਂ ਸੇਵਾਵਾਂ","ਸ਼ਹਿਰ / ਇਲਾਕਾ","ਕੋਈ ਕਾਰੀਗਰ ਨਹੀਂ ਮਿਲਿਆ","📞 ਕਾਲ ਕਰੋ","ਰੇਟਿੰਗ / ਕੁਮੈਂਟ"],or:["କାରିଗର ଡାଇରେକ୍ଟୋରୀ","କାମ ଖୋଜନ୍ତୁ","ମୁଁ କାରିଗର","ସମସ୍ତ ସେବା","ସହର / ଅଞ୍ଚଳ","କେହି ମିଳିଲେ ନାହିଁ","📞 କଲ୍ କରନ୍ତୁ","ରେଟିଂ / ମନ୍ତବ୍ୟ"],as:["কাৰিগৰ ডিৰেক্টৰী","কাম বিচাৰক","মই কাৰিগৰ","সকলো সেৱা","চহৰ / অঞ্চল","কোনো কাৰিগৰ পোৱা নগ'ল","📞 কল কৰক","ৰেটিং / মন্তব্য"],ur:["کاریگر ڈائریکٹری","کام تلاش کریں","میں کاریگر ہوں","تمام خدمات","شہر / علاقہ","کوئی کاریگر نہیں ملا","📞 کال کریں","ریٹنگ / تبصرہ"],sd:["ڪاريگر ڊاريڪٽري","ڪم ڳوليو","مان ڪاريگر آهيان","سڀ خدمتون","شهر / علائقو","ڪو ڪاريگر نه مليو","📞 ڪال ڪريو","ريٽنگ / تبصرو"],ne:["कारिगर डाइरेक्टरी","काम खोज्नुहोस्","म कारिगर हुँ","सबै सेवाहरू","शहर / क्षेत्र","कुनै कारिगर भेटिएन","📞 कल गर्नुहोस्","रेटिङ / टिप्पणी"],bho:["कारीगर डायरेक्टरी","काम खोजीं","हम कारीगर हईं","सब काम","शहर / इलाका","कवनो कारीगर ना मिलल","📞 फोन करीं","रेटिंग / कमेंट"],mai:["कारीगर डायरेक्टरी","काज ताकू","हम कारीगर छी","सभ सेवा","शहर / इलाका","कोनो कारीगर नहि भेटल","📞 फोन करू","रेटिंग / कमेंट"],kok:["कारागीर डिरेक्टरी","काम सोदचें","हांव कारागीर","सगळ्यो सेवा","शार / वाठार","कोणूच मेळ्ळो ना","📞 कॉल करचो","रेटिंग / कमेंट"],doi:["कारीगर डायरेक्टरी","कम्म ढूंढो","मैं कारीगर आं","सारियां सेवां","शैह्‌र / इलाका","कोई कारीगर नेईं मिलेआ","📞 फोन करो","रेटिंग / कमेंट"],hn:["Karigar Directory","Kaam dhundhein","Main karigar hu","Sabhi kaam","Shehar / Area","Koi karigar nahi mila","📞 Call karein","Rating / Comment"]};
+for(const k in LG){T[k]={};K.forEach((x,i)=>T[k][x]=LG[k][i])}
+Object.assign(T.hi,{sh:"↗ शेयर"});Object.assign(T.en,{sh:"↗ Share"});
+Object.assign(T.hi,{rt:"रेट (जैसे ₹800/दिन)",gps:"📍 मेरी लोकेशन सेव करें",sk2:"दूसरा काम (वैकल्पिक)",av:"उपलब्ध",bz:"व्यस्त",sv2:"बदलाव सेव करें",shp:"↗ प्रोफाइल शेयर करें",cph:"आपका मोबाइल नंबर",gerr:"लोकेशन नहीं मिली"});
+Object.assign(T.en,{rt:"Rate (e.g. ₹800/day)",gps:"📍 Save my location",sk2:"Second skill (optional)",av:"Available",bz:"Busy",sv2:"Save changes",shp:"↗ Share my profile",cph:"Your mobile number",gerr:"Location not available"});
+
+const FC={apiKey:"AIzaSyBufsmMu6n3CQlIeWaRfjzbHaRMnzVFQeM",authDomain:"karigar-directory.firebaseapp.com",projectId:"karigar-directory",storageBucket:"karigar-directory.firebasestorage.app",messagingSenderId:"63884159005",appId:"1:63884159005:web:aa0819693034409160bef4"};
+const ADMIN="+918957861390";
+const app=initializeApp(FC),auth=getAuth(app),db=getFirestore(app);
+let L="hi",user=null,mine=null,P=[],R={},RP={},cur=1,OP={},G={},G2=null,conf=null,back=false;
+const $=i=>document.getElementById(i),tr=k=>T[L][k]||T.en[k];
+const sn=i=>["hi","mr","bho","mai","kok","doi","ne"].includes(L)?S[i][1]:S[i][0];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const isAdmin=()=>user&&user.phoneNumber==ADMIN;
+const msg=t=>{if($("msg"))$("msg").textContent=t};
+function setL(v){L=v;render()}
+function tab(n){cur=n;[1,2,3].forEach(i=>{$("v"+i).hidden=n!=i;$("b"+i).className=n==i?"on":""});if(n==3)adm()}
+function render(){document.documentElement.lang=L;document.documentElement.dir=["ur","sd"].includes(L)?"rtl":"ltr";
+$("lang").innerHTML=Object.keys(N).map(k=>`<option value="${k}" ${k==L?"selected":""}>${N[k]}</option>`).join("");
+$("t").textContent=tr("t");$("b1").textContent=tr("f");$("b2").textContent=tr("r");
+const a=$("sk").value;$("sk").innerHTML=`<option value="">${tr("all")}</option>`+S.map((s,i)=>`<option value="${i}">${sn(i)}</option>`).join("");$("sk").value=a;
+$("ct").placeholder=tr("city");acc();tab(cur);list()}
+async function load(){try{const[a,b]=await Promise.all([getDocs(collection(db,"karigar")),getDocs(collectionGroup(db,"reviews"))]);
+P=a.docs.map(d=>({id:d.id,...d.data()}));R={};b.docs.forEach(d=>{const k=d.ref.parent.parent.id;(R[k]=R[k]||[]).push({...d.data(),u:d.id})});list()}
+catch(e){$("ls").innerHTML=`<p class="mu">Error: ${esc(e.code||e.message)}</p>`}}
+const avg=k=>{const r=R[k]||[];return r.length?r.reduce((s,x)=>s+x.s,0)/r.length:0};
+const stars=k=>{const r=R[k]||[];return r.length?"⭐ "+avg(k).toFixed(1)+" ("+r.length+")":"☆ –"};
+function dist(p){const r=x=>x*Math.PI/180,a=Math.sin(r(p.la-G2.la)/2)**2+Math.cos(r(G2.la))*Math.cos(r(p.la))*Math.sin(r(p.lo-G2.lo)/2)**2;return 12742*Math.asin(Math.sqrt(a))}
+function card(p){return `<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)}<div class="mu">${p.x} ${tr("yr")} · ${esc(p.c)}${p.s2!=null?" · "+sn(p.s2):""}${p.rt?" · 💰 "+esc(p.rt):""}${p.d<1e8?" · 📍 "+p.d.toFixed(1)+" km":""}</div>
+<div class="mu">${p.f?"🌟 ":""}${p.a!==false?"🟢 "+tr("av"):"🔴 "+tr("bz")} · ✔ Verified</div>
+<div class="row"><a class="call" href="tel:${p.p}">${tr("call")}</a><a class="call wa" href="https://wa.me/${p.p.slice(1)}" target="_blank" rel="noopener">WhatsApp</a></div>
+<div class="mu">${p.p} <button class="rep" onclick="cp('${p.p}')">📋 Copy</button></div>
+<button class="rt" onclick="tg('${p.id}')">${stars(p.id)} · ${tr("rate")}</button>${OP[p.id]?rvp(p.id):""}<button class="rep" onclick="rpt('${p.id}')">${tr("rep")}</button></div>`}
+function list(){const s=$("sk").value,c=$("ct").value.trim().toLowerCase(),so=$("so2").value;
+let r=P.filter(p=>(s===""||p.s==s||p.s2==s)&&(!c||(p.c||"").toLowerCase().includes(c))&&(!$("av").checked||p.a!==false));
+r.forEach(p=>{p.d=G2&&p.la!=null?dist(p):1e9;p.g=avg(p.id)});
+r.sort((a,b)=>(b.f?1:0)-(a.f?1:0)||(so=="r"?b.g-a.g:so=="e"?b.x-a.x:so=="n"?a.d-b.d:0));
+$("ls").innerHTML=r.length?r.map(card).join(""):`<p class="mu">${tr("none")}</p>`}
+function srt(){if($("so2").value=="n"&&!G2)navigator.geolocation.getCurrentPosition(q=>{G2={la:q.coords.latitude,lo:q.coords.longitude};list()},()=>{$("so2").value="";alert(tr("gerr"));list()});else list()}
+function geo(){navigator.geolocation.getCurrentPosition(q=>{G={la:q.coords.latitude,lo:q.coords.longitude};$("gb").textContent="✅ "+tr("gps")},()=>alert(tr("gerr")))}
+function cp(t){navigator.clipboard.writeText(t).then(()=>alert("Copied "+t)).catch(()=>prompt("Number:",t))}
+function tg(k){const w=OP[k];OP={};OP[k]=!w;list()}
+function needLogin(){back=true;tab(2)}
+function rvp(k){const r=R[k]||[];let h=`<div class="rv">`+(r.length?r.map(x=>`<p><b>${"★".repeat(x.s)}${"☆".repeat(5-x.s)}</b> ${esc(x.n||"Customer")}<br>${esc(x.t)}</p>`).join(""):`<p class="mu">${tr("norv")}</p>`);
+if(!user)h+=`<button onclick="needLogin()">${tr("vo")} OTP → ${tr("rate")}</button>`;
+else if(user.uid!=k)h+=`<select id="st">${[5,4,3,2,1].map(n=>`<option value="${n}">${"★".repeat(n)} (${n})</option>`).join("")}</select><input id="rn" placeholder="${tr("rnm")}" maxlength="30"><input id="rc" placeholder="${tr("cm")}" maxlength="200"><button onclick="sendRv('${k}')">${tr("sub")}</button>`;
+return h+`</div>`}
+async function sendRv(k){const o={s:+$("st").value,t:$("rc").value.trim().slice(0,200),n:$("rn").value.trim().slice(0,30),ts:Date.now()};
+try{await setDoc(doc(db,"karigar",k,"reviews",user.uid),o);await load()}catch(e){alert("Error: "+e.code)}}
+async function rpt(k){if(!user){needLogin();return}try{await addDoc(collection(db,"reports"),{kid:k,by:user.uid,ts:Date.now()});alert("✔ Reported")}catch(e){alert("Error: "+e.code)}}
+function acc(){const v=$("v2");
+if(!user){v.innerHTML=`<p class="mu">+91</p><input id="ph" type="tel" maxlength="10" inputmode="numeric" placeholder="${tr("ph")}"><button id="so" onclick="sendOtp()">${tr("so")}</button><div id="ob" hidden><input id="otp" maxlength="6" inputmode="numeric" placeholder="${tr("otp")}"><button onclick="verify()">${tr("vo")}</button></div><div id="msg" class="ok"></div>`;return}
+const m=mine||{},o=S.map((s,i)=>`<option value="${i}">${sn(i)}</option>`).join("");
+v.innerHTML=`<div class="mu">✅ ${user.phoneNumber}</div><input id="nm" placeholder="${tr("nm")}" value="${esc(m.n)}"><select id="ks">${o}</select><select id="ks2"><option value="">${tr("sk2")}</option>${o}</select><input id="ex" type="number" min="0" max="60" placeholder="${tr("ex")}" value="${m.x??""}"><input id="cy" placeholder="${tr("city")}" value="${esc(m.c)}"><input id="rt" maxlength="30" placeholder="${tr("rt")}" value="${esc(m.rt)}"><button type="button" onclick="geo()" id="gb">${m.la!=null?"✅ ":""}${tr("gps")}</button><label><input type="checkbox" id="ea" ${m.a!==false?"checked":""} style="width:auto"> 🟢 ${tr("av")}</label><button onclick="save()">${mine?tr("sv2"):tr("sv")}</button><div id="msg" class="ok"></div>${mine?`<button onclick="shp()">${tr("shp")}</button><button class="gh" onclick="del()">${tr("del")}</button>`:""}<button class="gh" onclick="out()">${tr("lo")}</button>`;
+$("ks").value=m.s??0;$("ks2").value=m.s2??""}
+async function sendOtp(){const p=$("ph").value.trim();if(!/^[6-9]\d{9}$/.test(p)){msg(tr("inv"));return}
+try{if(window.rv){try{window.rv.clear()}catch(e){}}window.rv=new RecaptchaVerifier(auth,"so",{size:"invisible"});
+conf=await signInWithPhoneNumber(auth,"+91"+p,window.rv);$("ob").hidden=false;msg("")}catch(e){msg("Error: "+(e.code||e.message))}}
+async function verify(){try{await conf.confirm($("otp").value.trim())}catch(e){msg(tr("bad"))}}
+function out(){signOut(auth)}
+async function save(){const n=$("nm").value.trim(),c=$("cy").value.trim(),x=$("ex").value;if(!n||!c||x===""){msg(tr("fill"));return}
+const s2=$("ks2").value,m=mine||{};
+const d={n,s:+$("ks").value,s2:s2===""?null:+s2,x:+x,c,rt:$("rt").value.trim(),a:$("ea").checked,la:G.la??m.la??null,lo:G.lo??m.lo??null,p:user.phoneNumber,ts:m.ts||Date.now()};
+try{await setDoc(doc(db,"karigar",user.uid),d,{merge:true});mine={...m,...d};await load();acc();msg(tr("done"))}catch(e){msg("Error: "+(e.code||e.message))}}
+async function del(){try{await deleteDoc(doc(db,"karigar",user.uid));mine=null;await load();acc()}catch(e){msg("Error: "+e.code)}}
+function shp(){const p=mine,t=p.n+" - "+sn(p.s)+" ("+p.x+" yrs), "+p.c+". Call: "+p.p+" "+location.href;if(navigator.share)navigator.share({title:tr("t"),text:t}).catch(()=>{});else navigator.clipboard.writeText(t).then(()=>alert("Copied"))}
+async function adm(){const v=$("v3");if(!isAdmin()){v.innerHTML="";return}
+RP={};try{(await getDocs(collection(db,"reports"))).docs.forEach(d=>{const k=d.data().kid;(RP[k]=RP[k]||[]).push(d.id)})}catch(e){}
+v.innerHTML=P.map(p=>`<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)} · ${p.p}<div class="mu">Reports: ${(RP[p.id]||[]).length} ${p.f?"· 🌟":""}</div><div class="row"><button onclick="af('${p.id}',${!p.f})">🌟</button><button onclick="ar('${p.id}')">↺</button><button onclick="ad('${p.id}')">🗑</button></div>${(R[p.id]||[]).map(x=>`<p class="mu">${"★".repeat(x.s)} ${esc(x.t)} <button class="rep" onclick="adr('${p.id}','${x.u}')">🗑</button></p>`).join("")}</div>`).join("")}
+async function af(k,f){await updateDoc(doc(db,"karigar",k),{f});await load();adm()}
+async function ar(k){for(const i of RP[k]||[])await deleteDoc(doc(db,"reports",i));adm()}
+async function ad(k){for(const x of R[k]||[])await deleteDoc(doc(db,"karigar",k,"reviews",x.u));await deleteDoc(doc(db,"karigar",k));await load();adm()}
+async function adr(k,u){await deleteDoc(doc(db,"karigar",k,"reviews",u));await load();adm()}
+onAuthStateChanged(auth,async u=>{user=u;mine=null;if(u){try{const d=await getDoc(doc(db,"karigar",u.uid));mine=d.exists()?d.data():null}catch(e){}}
+$("b3").hidden=!isAdmin();acc();if(u&&back){back=false;tab(1)}if(cur==3)adm()});
+Object.assign(window,{setL,tab,list,srt,geo,cp,tg,needLogin,sendRv,rpt,sendOtp,verify,out,save,del,shp,af,ar,ad,adr});
+render();load();
+</script></body></html>
