@@ -87,13 +87,14 @@ async function sendRv(k){const o={s:+$("st").value,t:$("rc").value.trim().slice(
 try{await setDoc(doc(db,"karigar",k,"reviews",user.uid),o);await load()}catch(e){alert("Error: "+e.code)}}
 async function rpt(k){if(!user){needLogin();return}try{await addDoc(collection(db,"reports"),{kid:k,by:user.uid,ts:Date.now()});alert("✔ Reported")}catch(e){alert("Error: "+e.code)}}
 function acc(){const v=$("v2");
-if(!user){v.innerHTML=`<p class="mu">+91</p><input id="ph" type="tel" maxlength="10" inputmode="numeric" placeholder="${tr("ph")}"><button id="so" onclick="sendOtp()">${tr("so")}</button><div id="ob" hidden><input id="otp" maxlength="6" inputmode="numeric" placeholder="${tr("otp")}"><button onclick="verify()">${tr("vo")}</button></div><div id="msg" class="ok"></div>`;return}
+if(!user){v.innerHTML=`<p class="mu">+91</p><input id="ph" type="tel" maxlength="10" inputmode="numeric" placeholder="${tr("ph")}"><button id="so" onclick="sendOtp()">${tr("so")}</button><div id="ob" hidden><input id="otp" maxlength="6" inputmode="numeric" placeholder="${tr("otp")}"><button onclick="verify()">${tr("vo")}</button></div><div id="rcb"></div><div id="msg" class="ok"></div>`;return}
 const m=mine||{},o=S.map((s,i)=>`<option value="${i}">${sn(i)}</option>`).join("");
 v.innerHTML=`<div class="mu">✅ ${user.phoneNumber}</div><input id="nm" placeholder="${tr("nm")}" value="${esc(m.n)}"><select id="ks">${o}</select><select id="ks2"><option value="">${tr("sk2")}</option>${o}</select><input id="ex" type="number" min="0" max="60" placeholder="${tr("ex")}" value="${m.x??""}"><input id="cy" placeholder="${tr("city")}" value="${esc(m.c)}"><input id="rt" maxlength="30" placeholder="${tr("rt")}" value="${esc(m.rt)}"><button type="button" onclick="geo()" id="gb">${m.la!=null?"✅ ":""}${tr("gps")}</button><label><input type="checkbox" id="ea" ${m.a!==false?"checked":""} style="width:auto"> 🟢 ${tr("av")}</label><button onclick="save()">${mine?tr("sv2"):tr("sv")}</button><div id="msg" class="ok"></div>${mine?`<button onclick="shp()">${tr("shp")}</button><button class="gh" onclick="del()">${tr("del")}</button>`:""}<button class="gh" onclick="out()">${tr("lo")}</button>`;
 $("ks").value=m.s??0;$("ks2").value=m.s2??""}
 async function sendOtp(){const p=$("ph").value.trim();if(!/^[6-9]\d{9}$/.test(p)){msg(tr("inv"));return}
-try{if(window.rv){try{window.rv.clear()}catch(e){}}window.rv=new RecaptchaVerifier(auth,"so",{size:"invisible"});
-conf=await signInWithPhoneNumber(auth,"+91"+p,window.rv);$("ob").hidden=false;msg("")}catch(e){msg("Error: "+(e.code||e.message))}}
+try{if(window.rv){try{window.rv.clear()}catch(e){}window.rv=null}
+$("rcb").innerHTML='<div id="rcx"></div>';window.rv=new RecaptchaVerifier(auth,"rcx",{size:"invisible"});
+conf=await signInWithPhoneNumber(auth,"+91"+p,window.rv);$("ob").hidden=false;msg("")}catch(e){msg("Error: "+(e.code||e.message));try{window.rv.clear()}catch(x){}window.rv=null}}
 async function verify(){try{await conf.confirm($("otp").value.trim())}catch(e){msg(tr("bad"))}}
 function out(){signOut(auth)}
 async function save(){const n=$("nm").value.trim(),c=$("cy").value.trim(),x=$("ex").value;if(!n||!c||x===""){msg(tr("fill"));return}
