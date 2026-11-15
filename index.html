@@ -11,7 +11,7 @@ button,.call{background:var(--pr);color:#fff;border:0;font-weight:600;cursor:poi
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:8px 0}
 .call{display:block;text-align:center;padding:10px;border-radius:10px;text-decoration:none}.wa{background:#25a244}
 .mu{color:var(--mu);font-size:13px}.rep{background:none;color:var(--mu);border:0;font-size:12px;width:auto;padding:4px 0;font-weight:400}
-.rt{background:none;color:var(--pr);border:0;width:auto;padding:6px 0;font-weight:600;margin:0}.gh{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.rt{background:none;color:var(--pr);border:0;width:auto;padding:6px 0;font-weight:600;margin:0}.rt,.rp{display:block}.rp{margin-top:2px}.gh{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
 .ok{color:#2b8a3e;font-size:14px}.rv{border-top:1px solid var(--bd);margin-top:8px;padding-top:6px}.rv p{margin:4px 0;font-size:14px}
 </style></head><body>
 <div class="row"><h1 style="display:flex;align-items:center;gap:8px"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#e8590c"/><g stroke="#fff" stroke-linecap="round" fill="none"><line x1="20" y1="44" x2="42" y2="22" stroke-width="5"/><line x1="36" y1="18" x2="46" y2="28" stroke-width="9"/><line x1="44" y1="44" x2="25" y2="25" stroke-width="5"/><circle cx="21" cy="21" r="6" stroke-width="4"/></g><line x1="14" y1="14" x2="19" y2="19" stroke="#e8590c" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="14" r="5" fill="#fff"/><path d="M48 14l1.6 1.6L52.5 12" stroke="#e8590c" stroke-width="1.6" fill="none"/></svg><span id="t"></span></h1><select id="lang" onchange="setL(this.value)"></select></div><button id="ib" hidden onclick="inst()">📲 Install app</button>
@@ -68,7 +68,7 @@ function card(p){return `<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)}<div 
 <div class="mu">${p.f?"🌟 ":""}${p.a!==false?"🟢 "+tr("av"):"🔴 "+tr("bz")} · ✔ Verified</div>
 <div class="row"><a class="call" href="tel:${p.p}">${tr("call")}</a><a class="call wa" href="https://wa.me/${p.p.slice(1)}" target="_blank" rel="noopener">WhatsApp</a></div>
 <div class="mu">${p.p} <button class="rep" onclick="cp('${p.p}')">📋 Copy</button></div>
-<button class="rt" onclick="tg('${p.id}')">${stars(p.id)} · ${tr("rate")}</button>${OP[p.id]?rvp(p.id):""}<button class="rep" onclick="rpt('${p.id}')">${tr("rep")}</button></div>`}
+<button class="rt" onclick="tg('${p.id}')">${stars(p.id)} · ${tr("rate")}</button>${OP[p.id]?rvp(p.id):""}<button class="rep rp" onclick="rpt('${p.id}')">${tr("rep")}</button></div>`}
 function list(){const s=$("sk").value,c=$("ct").value.trim().toLowerCase(),so=$("so2").value;
 let r=P.filter(p=>(s===""||p.s==s||p.s2==s)&&(!c||(p.c||"").toLowerCase().includes(c))&&(!$("av").checked||p.a!==false));
 r.forEach(p=>{p.d=G2&&p.la!=null?dist(p):1e9;p.g=avg(p.id)});
