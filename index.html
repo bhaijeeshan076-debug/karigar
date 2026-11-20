@@ -18,6 +18,8 @@ button,.call{background:var(--pr);color:#fff;border:0;font-weight:600;cursor:poi
 <div class="row tabs"><button id="b1" onclick="tab(1)"></button><button id="b2" onclick="tab(2)"></button><button id="b3" onclick="tab(3)" style="flex:0 0 48px" hidden>🔒</button></div>
 <div id="v1"><select id="sk" onchange="list()"></select><input id="ct" oninput="list()"><div class="row"><select id="so2" onchange="srt()"><option value="">↕ Sort / क्रम</option><option value="r">⭐ Rating</option><option value="e">💼 Experience</option><option value="n">📍 Nearest / नज़दीकी</option></select><label class="mu" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="av" onchange="list()" style="width:auto"> 🟢 Available</label></div><div id="ls"><p class="mu">…</p></div></div>
 <div id="v2" hidden></div><div id="v3" hidden></div>
+<div class="mu" style="text-align:center;margin:28px 0"><a href="privacy.html" style="color:var(--pr)">Privacy Policy</a> · <a href="#" id="fh" onclick="help();return false" style="color:var(--pr)"></a></div>
+<div id="hp" hidden style="position:fixed;inset:0;background:#000b;padding:16px;z-index:9"><div class="card"><b>📩</b><textarea id="hm" rows="5" maxlength="500" style="width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit"></textarea><button id="hs" onclick="sendHelp()"></button><button class="gh" onclick="document.getElementById('hp').hidden=true">✕</button><div id="hmsg" class="ok"></div></div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,RecaptchaVerifier,signInWithPhoneNumber,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -49,6 +51,8 @@ let L="hi",user=null,mine=null,P=[],R={},RP={},cur=1,OP={},G={},G2=null,conf=nul
 const $=i=>document.getElementById(i),tr=k=>T[L][k]||T.en[k];
 const sn=i=>["hi","mr","bho","mai","kok","doi","ne"].includes(L)?S[i][1]:S[i][0];
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+Object.assign(T.hi,{cons:"मैं सहमत हूँ कि मेरा नाम, काम, शहर और मोबाइल नंबर सबको दिखेगा।",priv:"Privacy Policy",help:"मदद / शिकायत",hsend:"भेजें",hdone:"✔ भेज दिया गया",hph:"अपनी समस्या या शिकायत लिखें",rdone:"✔ रिपोर्ट हो गई",rerr:"आप पहले रिपोर्ट कर चुके हैं"});
+Object.assign(T.en,{cons:"I agree that my name, skill, city and mobile number will be visible to everyone.",priv:"Privacy Policy",help:"Help / Complaint",hsend:"Send",hdone:"✔ Sent",hph:"Write your problem or complaint",rdone:"✔ Reported",rerr:"You have already reported"});
 const ORD=[...S.keys()].filter(i=>i!=29).concat(29);const isAdmin=()=>user&&user.phoneNumber==ADMIN;
 const msg=t=>{if($("msg"))$("msg").textContent=t};
 function setL(v){L=v;render()}
@@ -57,9 +61,9 @@ function render(){document.documentElement.lang=L;document.documentElement.dir=[
 $("lang").innerHTML=Object.keys(N).map(k=>`<option value="${k}" ${k==L?"selected":""}>${N[k]}</option>`).join("");
 $("t").textContent=tr("t");$("b1").textContent=tr("f");$("b2").textContent=tr("r");
 const a=$("sk").value;$("sk").innerHTML=`<option value="">${tr("all")}</option>`+ORD.map(i=>`<option value="${i}">${sn(i)}</option>`).join("");$("sk").value=a;
-$("ct").placeholder=tr("city");acc();tab(cur);list()}
+$("ct").placeholder=tr("city");$("fh").textContent=tr("help");acc();tab(cur);list()}
 async function load(){try{const[a,b]=await Promise.all([getDocs(collection(db,"karigar")),getDocs(collectionGroup(db,"reviews"))]);
-P=a.docs.map(d=>({id:d.id,...d.data()}));R={};b.docs.forEach(d=>{const k=d.ref.parent.parent.id;(R[k]=R[k]||[]).push({...d.data(),u:d.id})});list()}
+P=a.docs.map(d=>({id:d.id,...d.data()}));R={};RP={};try{(await getDocs(collection(db,"reports"))).docs.forEach(d=>{const k=d.data().kid;(RP[k]=RP[k]||[]).push(d.id)})}catch(e){}b.docs.forEach(d=>{const k=d.ref.parent.parent.id;(R[k]=R[k]||[]).push({...d.data(),u:d.id})});list()}
 catch(e){$("ls").innerHTML=`<p class="mu">Error: ${esc(e.code||e.message)}</p>`}}
 const avg=k=>{const r=R[k]||[];return r.length?r.reduce((s,x)=>s+x.s,0)/r.length:0};
 const stars=k=>{const r=R[k]||[];return r.length?"⭐ "+avg(k).toFixed(1)+" ("+r.length+")":"☆ –"};
@@ -70,7 +74,7 @@ function card(p){return `<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)}<div 
 <div class="mu">${p.p} <button class="rep" onclick="cp('${p.p}')">📋 Copy</button></div>
 <button class="rt" onclick="tg('${p.id}')">${stars(p.id)} · ${tr("rate")}</button>${OP[p.id]?rvp(p.id):""}<button class="rep rp" onclick="rpt('${p.id}')">${tr("rep")}</button></div>`}
 function list(){const s=$("sk").value,c=$("ct").value.trim().toLowerCase(),so=$("so2").value;
-let r=P.filter(p=>(s===""||p.s==s||p.s2==s)&&(!c||(p.c||"").toLowerCase().includes(c))&&(!$("av").checked||p.a!==false));
+let r=P.filter(p=>!((RP[p.id]||[]).length>=3&&!isAdmin()&&!(user&&user.uid==p.id))&&(s===""||p.s==s||p.s2==s)&&(!c||(p.c||"").toLowerCase().includes(c))&&(!$("av").checked||p.a!==false));
 r.forEach(p=>{p.d=G2&&p.la!=null?dist(p):1e9;p.g=avg(p.id)});
 r.sort((a,b)=>(b.f?1:0)-(a.f?1:0)||(so=="r"?b.g-a.g:so=="e"?b.x-a.x:so=="n"?a.d-b.d:0));
 $("ls").innerHTML=r.length?r.map(card).join(""):`<p class="mu">${tr("none")}</p>`}
@@ -85,11 +89,11 @@ else if(user.uid!=k)h+=`<select id="st">${[5,4,3,2,1].map(n=>`<option value="${n
 return h+`</div>`}
 async function sendRv(k){const o={s:+$("st").value,t:$("rc").value.trim().slice(0,200),n:$("rn").value.trim().slice(0,30),ts:Date.now()};
 try{await setDoc(doc(db,"karigar",k,"reviews",user.uid),o);await load()}catch(e){alert("Error: "+e.code)}}
-async function rpt(k){if(!user){needLogin();return}try{await addDoc(collection(db,"reports"),{kid:k,by:user.uid,ts:Date.now()});alert("✔ Reported")}catch(e){alert("Error: "+e.code)}}
+async function rpt(k){if(!user){needLogin();return}try{await setDoc(doc(db,"reports",k+"_"+user.uid),{kid:k,by:user.uid,ts:Date.now()});alert(tr("rdone"));await load()}catch(e){alert(tr("rerr"))}}
 function acc(){const v=$("v2");
 if(!user){v.innerHTML=`<p class="mu">+91</p><input id="ph" type="tel" maxlength="10" inputmode="numeric" placeholder="${tr("ph")}"><button id="so" onclick="sendOtp()">${tr("so")}</button><div id="ob" hidden><input id="otp" maxlength="6" inputmode="numeric" placeholder="${tr("otp")}"><button onclick="verify()">${tr("vo")}</button></div><div id="rcb"></div><div id="msg" class="ok"></div>`;return}
 const m=mine||{},o=ORD.map(i=>`<option value="${i}">${sn(i)}</option>`).join("");
-v.innerHTML=`<div class="mu">✅ ${user.phoneNumber}</div><input id="nm" placeholder="${tr("nm")}" value="${esc(m.n)}"><select id="ks">${o}</select><select id="ks2"><option value="">${tr("sk2")}</option>${o}</select><input id="ex" type="number" min="0" max="60" placeholder="${tr("ex")}" value="${m.x??""}"><input id="cy" placeholder="${tr("city")}" value="${esc(m.c)}"><input id="rt" maxlength="30" placeholder="${tr("rt")}" value="${esc(m.rt)}"><button type="button" onclick="geo()" id="gb">${m.la!=null?"✅ ":""}${tr("gps")}</button><label><input type="checkbox" id="ea" ${m.a!==false?"checked":""} style="width:auto"> 🟢 ${tr("av")}</label><button onclick="save()">${mine?tr("sv2"):tr("sv")}</button><div id="msg" class="ok"></div>${mine?`<button onclick="shp()">${tr("shp")}</button><button class="gh" onclick="del()">${tr("del")}</button>`:""}<button class="gh" onclick="out()">${tr("lo")}</button>`;
+v.innerHTML=`<div class="mu">✅ ${user.phoneNumber}</div><input id="nm" placeholder="${tr("nm")}" value="${esc(m.n)}"><select id="ks">${o}</select><select id="ks2"><option value="">${tr("sk2")}</option>${o}</select><input id="ex" type="number" min="0" max="60" placeholder="${tr("ex")}" value="${m.x??""}"><input id="cy" placeholder="${tr("city")}" value="${esc(m.c)}"><input id="rt" maxlength="30" placeholder="${tr("rt")}" value="${esc(m.rt)}"><button type="button" onclick="geo()" id="gb">${m.la!=null?"✅ ":""}${tr("gps")}</button><label><input type="checkbox" id="ea" ${m.a!==false?"checked":""} style="width:auto"> 🟢 ${tr("av")}</label>${mine?"":`<label class="mu"><input type="checkbox" id="cn" style="width:auto"> ${tr("cons")} <a href="privacy.html" target="_blank" style="color:var(--pr)">${tr("priv")}</a></label>`}<button onclick="save()">${mine?tr("sv2"):tr("sv")}</button><div id="msg" class="ok"></div>${mine?`<button onclick="shp()">${tr("shp")}</button><button class="gh" onclick="del()">${tr("del")}</button>`:""}<button class="gh" onclick="out()">${tr("lo")}</button>`;
 $("ks").value=m.s??0;$("ks2").value=m.s2??""}
 async function sendOtp(){const p=$("ph").value.trim();if(!/^[6-9]\d{9}$/.test(p)){msg(tr("inv"));return}
 try{if(window.rv){try{window.rv.clear()}catch(e){}window.rv=null}
@@ -97,22 +101,26 @@ $("rcb").innerHTML='<div id="rcx"></div>';window.rv=new RecaptchaVerifier(auth,"
 conf=await signInWithPhoneNumber(auth,"+91"+p,window.rv);$("ob").hidden=false;msg("")}catch(e){msg("Error: "+(e.code||e.message));try{window.rv.clear()}catch(x){}window.rv=null}}
 async function verify(){try{await conf.confirm($("otp").value.trim())}catch(e){msg(tr("bad"))}}
 function out(){signOut(auth)}
-async function save(){const n=$("nm").value.trim(),c=$("cy").value.trim(),x=$("ex").value;if(!n||!c||x===""){msg(tr("fill"));return}
+async function save(){const n=$("nm").value.trim(),c=$("cy").value.trim(),x=$("ex").value;if(!n||!c||x===""){msg(tr("fill"));return}if(!mine&&!$("cn").checked){msg(tr("cons"));return}
 const s2=$("ks2").value,m=mine||{};
-const d={n,s:+$("ks").value,s2:s2===""?null:+s2,x:+x,c,rt:$("rt").value.trim(),a:$("ea").checked,la:G.la??m.la??null,lo:G.lo??m.lo??null,p:user.phoneNumber,ts:m.ts||Date.now()};
+const d={n,s:+$("ks").value,s2:s2===""?null:+s2,x:+x,c,rt:$("rt").value.trim(),a:$("ea").checked,la:G.la??m.la??null,lo:G.lo??m.lo??null,p:user.phoneNumber,ts:m.ts||Date.now(),cs:m.cs||Date.now()};
 try{await setDoc(doc(db,"karigar",user.uid),d,{merge:true});mine={...m,...d};await load();acc();msg(tr("done"))}catch(e){msg("Error: "+(e.code||e.message))}}
 async function del(){try{await deleteDoc(doc(db,"karigar",user.uid));mine=null;await load();acc()}catch(e){msg("Error: "+e.code)}}
 function shp(){const p=mine,t=p.n+" - "+sn(p.s)+" ("+p.x+" yrs), "+p.c+". Call: "+p.p+" "+location.href;if(navigator.share)navigator.share({title:tr("t"),text:t}).catch(()=>{});else navigator.clipboard.writeText(t).then(()=>alert("Copied"))}
 async function adm(){const v=$("v3");if(!isAdmin()){v.innerHTML="";return}
 RP={};try{(await getDocs(collection(db,"reports"))).docs.forEach(d=>{const k=d.data().kid;(RP[k]=RP[k]||[]).push(d.id)})}catch(e){}
-v.innerHTML=P.map(p=>`<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)} · ${p.p}<div class="mu">Reports: ${(RP[p.id]||[]).length} ${p.f?"· 🌟":""}</div><div class="row"><button onclick="af('${p.id}',${!p.f})">🌟</button><button onclick="ar('${p.id}')">↺</button><button onclick="ad('${p.id}')">🗑</button></div>${(R[p.id]||[]).map(x=>`<p class="mu">${"★".repeat(x.s)} ${esc(x.t)} <button class="rep" onclick="adr('${p.id}','${x.u}')">🗑</button></p>`).join("")}</div>`).join("")}
+let cmp="";try{cmp=(await getDocs(collection(db,"complaints"))).docs.map(d=>`<div class="card"><div class="mu">📩 ${esc(d.data().ph)}</div>${esc(d.data().t)} <button class="rep" onclick="dc('${d.id}')">🗑</button></div>`).join("")}catch(e){}
+v.innerHTML=cmp+P.map(p=>`<div class="card"><b>${esc(p.n)}</b> · ${sn(p.s)} · ${p.p}<div class="mu">Reports: ${(RP[p.id]||[]).length} ${p.f?"· 🌟":""}</div><div class="row"><button onclick="af('${p.id}',${!p.f})">🌟</button><button onclick="ar('${p.id}')">↺</button><button onclick="ad('${p.id}')">🗑</button></div>${(R[p.id]||[]).map(x=>`<p class="mu">${"★".repeat(x.s)} ${esc(x.t)} <button class="rep" onclick="adr('${p.id}','${x.u}')">🗑</button></p>`).join("")}</div>`).join("")}
 async function af(k,f){await updateDoc(doc(db,"karigar",k),{f});await load();adm()}
 async function ar(k){for(const i of RP[k]||[])await deleteDoc(doc(db,"reports",i));adm()}
 async function ad(k){for(const x of R[k]||[])await deleteDoc(doc(db,"karigar",k,"reviews",x.u));await deleteDoc(doc(db,"karigar",k));await load();adm()}
 async function adr(k,u){await deleteDoc(doc(db,"karigar",k,"reviews",u));await load();adm()}
 onAuthStateChanged(auth,async u=>{user=u;mine=null;if(u){try{const d=await getDoc(doc(db,"karigar",u.uid));mine=d.exists()?d.data():null}catch(e){}}
 $("b3").hidden=!isAdmin();acc();if(u&&back){back=false;tab(1)}if(cur==3)adm()});
-Object.assign(window,{setL,tab,list,srt,geo,cp,tg,needLogin,sendRv,rpt,sendOtp,verify,out,save,del,shp,af,ar,ad,adr});
+function help(){if(!user){needLogin();return}$("hm").placeholder=tr("hph");$("hs").textContent=tr("hsend");$("hmsg").textContent="";$("hp").hidden=false}
+async function sendHelp(){const t=$("hm").value.trim();if(t.length<5)return;try{await addDoc(collection(db,"complaints"),{t:t.slice(0,500),by:user.uid,ph:user.phoneNumber,ts:Date.now()});$("hm").value="";$("hmsg").textContent=tr("hdone")}catch(e){$("hmsg").textContent="Error: "+(e.code||e.message)}}
+async function dc(i){await deleteDoc(doc(db,"complaints",i));adm()}
+Object.assign(window,{help,sendHelp,dc,setL,tab,list,srt,geo,cp,tg,needLogin,sendRv,rpt,sendOtp,verify,out,save,del,shp,af,ar,ad,adr});
 let dp=null;window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;$("ib").hidden=false});
 window.addEventListener("appinstalled",()=>{$("ib").hidden=true});
 window.inst=async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;$("ib").hidden=true}};
